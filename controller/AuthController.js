@@ -1,6 +1,14 @@
 const userSchema = require('../model/userSchema')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const env = require('dotenv')
+const nodemailer = require('nodemailer')
+const crypto = require('crypto')
+const { error } = require('console')
+const { link } = require('fs')
+
+env.config()
+
 
 const register = async(req,res)=>{
     try{
@@ -18,6 +26,7 @@ const register = async(req,res)=>{
                 message: 'user already exist'
             })
         }
+        //Check were the users password should not be less than eightlength
         if(password.length < 8){
             return res.status(400).json({
                 message: 'password must be minimum 8 length'
@@ -34,7 +43,10 @@ const register = async(req,res)=>{
         // Save users details in database
         await user.save()
         // Create JWT token
-        const token = jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:'1h'})
+        const token = jwt.sign({userId:user._id},
+            process.env.JWT_SECRET,
+            {expiresIn:'1h'}
+        )
 
         return res.status(201).json({
             message: 'user registered successfully' ,
@@ -98,21 +110,122 @@ const login = async(req,res)=>{
     }
 }
 
-const forgetPassword = async(req,res)=>{
+//send link to reset password
+const sendEmail = async (email,link)=>{
     try{
-        const {email} = req.body
-        const user = await userSchema.findOne({email})
-         //Find the email is registerd or not
-        if(!user){
-            return res.status(404).json({ message: 'user not found'})
+
+        //transport otp from created transporter
+        const transporter = nodemailer.createTransport({
+            service:'gmail',
+            auth:{
+                user:process.env.EMAIL_USER,
+                pass:process.env.EMAIL_PASS
+            },
+            tls:{
+                rejectUnauthorized:false
+            }
+        })
+
+        //Format for mail to send
+        const mailOptions = {  
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Reset password,',
+            html: `click link to reset password,link has only 10 minute validity <a href=" ${process.env.RESET_LINK}${link}">click here</a>`
         }
+        await transporter.sendMail(mailOptions)
         
     }
     catch(error){
-        res.status(500).json({error: 'error in forgetpassword'})
+
+        res.status(500).json({error: 'error in sendmail'})
+        console.error('error in sendmail' , error);
+        
+    }
+
+  
+}
+
+// Generate random string 
+const generateString = crypto.randomBytes(16).toString('hex')
+
+// 
+const forgetPassword = async(req,res)=>{
+    try{
+        const {email} = req.body
+
+        // Check were email is entered or not
+        if(!email){
+            return res.status(404).json({ message: 'mailId is required'})
+        }
+        const user = await userSchema.findOne({email})
+
+        //Find the email is registerd or not
+        if(!user){
+            return res.status(404).json({ message: 'user not found'})
+        }
+        const token = generateString 
+
+        //Save generated token to the database
+        user.resetToken = token
+
+        //Create 10 min valdity to password reset link
+        user.resetTokenExpires = Date.now() + 10 * 60 * 1000
+
+        //Save token and its validity to database 
+        await user.save()
+
+        //Invoke the function to send otp mail
+        await sendEmail(email,token)
+        res.status(200).json({ message:'otp is send to your email'})
+    }
+    catch(error){
+        res.status(500).json({ error: 'error in forgetpassword'})
         console.error('error in forgetpassword',error);
     }
    
 }
+
+const resetpassword = async(req,res)=>{
+    try{
+        const { newpassword }= req.body
+
+        //Find user token from the database
+         const user = await userSchema.findOne({ 
+            resetToken: req.params.token,
+            resetTokenExpires: { $gt: Date.now() }
+         })
+
+         //Check were token is valid or not
+         if(!user){
+            return res.status(400).json({ message: 'Token expired'})
+         }
+         //Check if user provide newpassword
+        if(!newpassword){
+            return res.status(400).json({ message: 'newpassword are required'})
+        }
+
+
+         //Hash the users new password
+         const hashpassword = await bcrypt.hash( newpassword, 10)
+         user.password = hashpassword
+
+         //clear the genrated token 
+         user.resetToken = undefined
+
+         //clear its tokens validity
+         user.resetTokenExpires = undefined
+
+         //Save changes to the database
+         user.save()  
+         res.status(200).json({ message: 'password is changed'})
+
+    }
+    catch(error){
+        res.status(500).json({ error: 'error in resetpassword'})
+        console.error('error in resetpassword',error);
+    }
+}
+
  
-module.exports = {register,login}
+module.exports = {register,login,forgetPassword,resetpassword}

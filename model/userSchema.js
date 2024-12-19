@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 const { type } = require('os')
 
-
 const userSchema = mongoose.Schema({
     username:{
         type:String,
@@ -19,6 +18,12 @@ const userSchema = mongoose.Schema({
         type:String,
         enum:['user','admin'],
         default:'user'
+    },
+    resetToken:{
+        type:String
+    },
+    resetTokenExpires:{
+        type:String
     }
 })
 
