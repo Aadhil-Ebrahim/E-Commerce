@@ -21,7 +21,7 @@ const productSchema = mongoose.Schema({
         default:0
     },
     image:{ 
-        type:String
+        type:Array
     }
 }) 
 const product = mongoose.model('products',productSchema)

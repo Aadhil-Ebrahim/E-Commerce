@@ -24,7 +24,11 @@ const userSchema = mongoose.Schema({
     },
     resetTokenExpires:{
         type:String
-    }
+    },
+    isBlock:{
+        type: Boolean,
+        default: false
+    }  
 })
 
 

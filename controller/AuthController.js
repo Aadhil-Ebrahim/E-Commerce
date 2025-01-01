@@ -4,6 +4,11 @@ const jwt = require('jsonwebtoken')
 const env = require('dotenv')
 const nodemailer = require('nodemailer')
 const crypto = require('crypto')
+const cookies = {
+    httpOnly: true,
+    maxAge: 3600000
+}
+
 const { error } = require('console')
 const { link } = require('fs')
 
@@ -12,41 +17,49 @@ env.config()
 
 const register = async(req,res)=>{
     try{
+
         //Make user to register their details
-        const {username,email,password} = req.body
+        const { username, email, password} = req.body
         const userExist = await userSchema.findOne({email})
         if(!username || !email || !password){
             return res.status(400).json ({
                 message: 'all fields are required'
             })
         }
+
         //Check user already exist or not
         if(userExist){
             return res.status(409).json({
                 message: 'user already exist'
             })
         }
+
         //Check were the users password should not be less than eightlength
-        if(password.length < 8){
+        if( password.length < 8){
             return res.status(400).json({
                 message: 'password must be minimum 8 length'
             })
         }
-        //Hash users password 
-        const hashPassword = await bcrypt.hash(password,10)
 
+        //Hash users password 
+        const hashPassword = await bcrypt.hash( password, 10)
         const user = await userSchema({
             username,
             email,
             password:hashPassword
         })
+
         // Save users details in database
         await user.save()
+
         // Create JWT token
         const token = jwt.sign({userId:user._id},
             process.env.JWT_SECRET,
             {expiresIn:'1h'}
         )
+
+        // Save this token to cookie
+        res.cookie( 'authToken', token, cookies)
 
         return res.status(201).json({
             message: 'user registered successfully' ,
@@ -63,6 +76,7 @@ const register = async(req,res)=>{
 }
 const login = async(req,res)=>{
     try{
+
         // Make sure that user provided required data
         const { email, password } = req.body
         if(!email || !password) {
@@ -81,23 +95,38 @@ const login = async(req,res)=>{
         if(!isMatch){
             return res.status(407).json({ message: 'wrong password'})
         }
-        // Check were the users roll is admin or not
+        
+        //Check if account is blocked 
+        if(user.isBlock == true){
+            return res.status(400).json({ message: 'registered account is blocked'})
+        }
+
+        // Check were the users roll is admin 
         if( user.role === 'admin' ){
+
             const token = jwt.sign(
                 { userId: user._id },
                 process.env.JWT_SECRET,
                 { expiresIn: '1h' })
+
+                 //Save this token to cookie
+                 res.cookie( 'authToken', token, cookies)
+
             return res.status(200).json({
                 message: 'admin login successfully',
                 token
             })
-        }
+        } 
+
         // Create JWT token
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         )
+
+         //Save this token to cookie
+         res.cookie( 'authToken', token, cookies)
         return res.status(200).json({
             message:'user login successfully', 
             token
@@ -111,7 +140,7 @@ const login = async(req,res)=>{
 }
 
 //send link to reset password
-const sendEmail = async (email,link)=>{
+const sendEmail = async (email,string)=>{
     try{
 
         //transport otp from created transporter
@@ -131,7 +160,7 @@ const sendEmail = async (email,link)=>{
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Reset password,',
-            html: `click link to reset password,link has only 10 minute validity <a href=" ${process.env.RESET_LINK}${link}">click here</a>`
+            text: `click link to reset password,link has only 10 minute validity  ${process.env.RESET_LINK}${string}  click here`
         }
         await transporter.sendMail(mailOptions)
         
@@ -200,20 +229,20 @@ const resetpassword = async(req,res)=>{
          if(!user){
             return res.status(400).json({ message: 'Token expired'})
          }
+
          //Check if user provide newpassword
         if(!newpassword){
             return res.status(400).json({ message: 'newpassword are required'})
         }
 
-
          //Hash the users new password
          const hashpassword = await bcrypt.hash( newpassword, 10)
          user.password = hashpassword
 
-         //clear the genrated token 
+         //Clear the genrated token 
          user.resetToken = undefined
 
-         //clear its tokens validity
+         //Clear its tokens validity
          user.resetTokenExpires = undefined
 
          //Save changes to the database
