@@ -56,8 +56,8 @@ const createProducts = async(req,res)=>{
 
 //Handller to get all products
 const getAllProducts = async(req,res)=>{
-
-    //Take required data from query
+    try{
+         //Take required data from query
     const{category} = req.query   
     const filter = {}
     if(category){
@@ -72,6 +72,12 @@ const getAllProducts = async(req,res)=>{
 
     //List all products 
     res.status(200).json(products)
+    }
+    catch(error){
+        res.status(500).json({error: 'error in getallproduct'})
+        console.error('error in getallproduct',error);
+    }
+   
 }
 
 //Handler to update products details

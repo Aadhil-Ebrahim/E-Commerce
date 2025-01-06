@@ -11,7 +11,8 @@ const addWishlist = async(req,res)=>{
         const productId = req.params.productId
 
         //Get user id from request object
-        const userId = req.user.userId
+        const userId = req.user.userId;
+        
         
         //Find user by id
         const user = await userSchema.findById(userId)
@@ -21,7 +22,7 @@ const addWishlist = async(req,res)=>{
        
         
         const wishlist = wishlistSchema({
-            userId: user,    
+            userId,    
             products: product
         })
         
@@ -30,22 +31,22 @@ const addWishlist = async(req,res)=>{
 
         //Check if user already exist for this user
         if(wishList){
-            
+          
             //Check if product already exist in users wishlist
             if(wishList.products.includes(productId)){ 
-                return res.status(400).json({ message: 'product is alredy added in wishlist'})
+                return res.status(400).json({ message: 'product is already added in wishlist'})
             }
             
             //If not add product to wishlist
             wishList.products.push(product)
-            await wishlistSchema.findByIdAndUpdate(wishList,{products: wishList.products})
+            await wishlistSchema.findByIdAndUpdate( wishList._id, { products: wishList.products}) 
     
             //Response with success
             return res.status(200).json({ message: 'product added to wishlist successfully',
                 products: wishList
             })
         }
-    
+     
         // If no existing wishlist is found, save the new wishlist
         await wishlist.save()
 
@@ -111,8 +112,6 @@ const getWishList = async(req,res)=>{
         res.status(500).json({ error: 'error in get wishlist '})
         console.error('error in get wishlist', error);      
     }
-    
- 
 }
 
 //Handler to removelist
@@ -124,11 +123,12 @@ const removeWishlist = async(req,res)=>{
     //Take product through route parameter
     const product = req.params.productId
     
-    await wishlistSchema.updateOne({userId: userId}, {$pull: {products: product}})
+    await wishlistSchema.updateOne({userId: userId}, { $pull: { products: product}})
     //Send success response
-    res.json({ message: ' wishlist removed successfully '})
+    res.status(200).json({ message: ' wishlist removed successfully '})
 
 }
 
+//Exports this all veriable 
 module.exports = {addWishlist, getWishList, removeWishlist } 
    

@@ -125,8 +125,6 @@ const login = async(req,res)=>{
             { expiresIn: '1h' }
         )
 
-         //Save this token to cookie
-         res.cookie( 'authToken', token, cookies)
         return res.status(200).json({
             message:'user login successfully', 
             token
