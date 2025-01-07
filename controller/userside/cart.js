@@ -28,19 +28,24 @@ const addToCart = async(req,res)=>{
             if(existProduct){
                 return res.json({ message: 'product already added to cart'}) 
             }
-                        
-            existUser.products.push({productId})
+            grossAmount = product.price*1
+
+            const totalAmount = existUser.totalAmount += grossAmount
             
-            await cartSchema.findByIdAndUpdate( existUser._id, { products: existUser.products})
+            existUser.products.push({productId, grossAmount})
+            
+            await cartSchema.findByIdAndUpdate( existUser._id, { products: existUser.products, totalAmount})
             
             return res.json({message: 'product added to cart successfullly'}) 
         }
 
+        grossAmount = product.price * 1
+
         const cart = await cartSchema({
             userId,
-            products: {productId},
+            products: {productId,grossAmount},
             totalAmount: product.price * 1
-            
+             
         })
 
         await cart.save()    
@@ -68,17 +73,25 @@ const quantity = async(req,res)=>{
     if(quantity){
 
         const Product = cart.products.find((item) => item.productId.toString() == productId)
-        const totalquantity = Product.quantity += 1
-        cart.totalAmount = product.price * totalquantity
         
+        const totalquantity = Product.quantity += 1
+        Product.grossAmount = totalquantity * product.price
+        cart.totalAmount = cart.products.reduce((total, product) => {
+            return total + product.grossAmount;
+          }, 0);
+          
         await cart.save()
-        return res.json({message:'quantity  is incresed'})
+        return res.json({message:'quantity is incresed'}) 
 
     }
     else{
+
         const Product = cart.products.find((item) => item.productId.toString() == productId)
-        const totalquantity = Product.quantity -= 1
-        cart.totalAmount -= product.price
+        Product.quantity -= 1
+        Product.grossAmount = Product.quantity * product.price;
+        cart.totalAmount = cart.products.reduce((total, product) => {
+            return total + product.grossAmount;
+          }, 0);
         
         await cart.save()
         res.json({message:'quantity is decresed'})
@@ -92,32 +105,35 @@ const viewCart = async(req,res)=>{
 
         const userId = req.user.userId
 
-        // const cart = await cartSchema.findOne({ userId }).populate('products.productId')
-
-        const cart = await cartSchema.aggregate([
-            {$match:{userId: new mongoose.Types.ObjectId(userId)}},
-            {$lookup:{
-                from:'products',
-                localField:'products.productId',
-                foreignField: '_id',
-                as:'cart'
-            }},
-            {$unwind: '$cart'},
-            {$project: {
-                name:'$cart.name',
-                price: '$cart.price',
-                 
-            }}
-        ])
-
-        console.log(cart);
+        const cart = await cartSchema.findOne({ userId }).populate({ path:'products.productId', select: '-_id -__v'})
         
+        // const cart = await cartSchema.aggregate([
+        //     {$match:{userId: new mongoose.Types.ObjectId(userId)}},
+        //     {$lookup:{
+        //         from:'products',
+        //         localField:'products.productId',
+        //         foreignField: '_id',
+        //         as:'cart'
+        //     }},
+        //     {$unwind: '$cart'},
+        //     // {$unwind:'$cart.products'},
+        //     {$project: {
+        //         name:'$cart.name',
+        //         price: '$cart.price',
+        //         category:'$cart.category',
+        //         quantity:'$cart.products.quantity',
+        //         // grossAmount:'$products.grossAmount',
+        //         totalAmount:1,
+        //         _id: 0
+                 
+        //     }}
+        // ])
 
         if(!cart){
             return res.status(400).json({ message: 'users cart is empty'})
         }
 
-        res.status(200).json({message: cart})
+        res.status(200).json({cart})
 
     }
     catch(error){
@@ -131,15 +147,18 @@ const removeCart = async(req,res)=>{
     try{
         const userId = req.user.userId
         const productId = req.params.productId
-        // const product = await productSchema.findOne({_id:})
-        const existUser = await cartSchema.findOne({userId})
-    
-        const product = await cartSchema.updateOne({userId}, { $pull: { products:{ productId }}})
-        console.log(product);
+        // const user = await cartSchema.findOne({userId})
+        const updatedCart = await cartSchema.findOneAndUpdate( {userId}, { $pull: { products:{ productId }}},{new: true})
+        // console.log(updatedCart);
         
-    
-        res.status(200).json({ message: 'product is removed from cart'})
-    
+        res.status(200).json({ message: 'product is removed from cart'}) 
+       
+        updatedCart.totalAmount = updatedCart.products.reduce(( total, product)=>{
+            return total + product.grossAmount
+        }, 0)
+        
+        await updatedCart.save()
+        
     }
     catch(error){
 

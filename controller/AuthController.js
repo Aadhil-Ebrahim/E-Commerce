@@ -121,8 +121,8 @@ const login = async(req,res)=>{
         // Create JWT token
         const token = jwt.sign(
             { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            process.env.JWT_SECRET
+            // { expiresIn: '1h' }
         )
 
         return res.status(200).json({
