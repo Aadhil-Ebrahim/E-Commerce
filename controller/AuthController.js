@@ -58,8 +58,6 @@ const register = async(req,res)=>{
             {expiresIn:'1h'}
         )
 
-        // Save this token to cookie
-        res.cookie( 'authToken', token, cookies)
 
         return res.status(201).json({
             message: 'user registered successfully' ,
@@ -110,7 +108,7 @@ const login = async(req,res)=>{
                 { expiresIn: '1h' })
 
                  //Save this token to cookie
-                 res.cookie( 'authToken', token, cookies)
+                //  res.cookie( 'authToken', token, cookies)
 
             return res.status(200).json({
                 message: 'admin login successfully',

@@ -40,9 +40,10 @@ const productsById = async(req,res)=>{
         })
     } 
     catch(error){
+        
+        //Handle any error and response error message
         res.status(500).json({ message: 'error in product by id'})
-        console.error('error in product by id ',error);
-         
+        console.error('error in product by id ',error);         
     }
     
 } 
@@ -74,6 +75,8 @@ const getProductBySearch = async(req,res)=>{
         })
     }
     catch(error){
+
+        //Handle any error and response error message
         res.status(400).json({ error: 'error in product by search'})
         console.error('error in product by search ',error);
         

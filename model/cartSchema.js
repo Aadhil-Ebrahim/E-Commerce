@@ -19,9 +19,12 @@ const schema = mongoose.Schema({
         }
        
     }],
+    discountAmount:{
+        type: Number
+    },
     totalAmount:{
         type: Number
-    }
+    },
 
 }) 
 

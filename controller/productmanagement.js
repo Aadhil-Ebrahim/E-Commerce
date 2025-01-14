@@ -35,7 +35,7 @@ const createProducts = async(req,res)=>{
         }
 
         //Save given files path if provided
-        if (req.files){
+        if(req.files){
             let path = []
             req.files.forEach((files)=>{path.push(files.path)})
             products.image = path 
@@ -98,7 +98,7 @@ const updateProducts = async(req,res)=>{
             return res.status(404).json({message: 'product not found'})
         }
 
-        //
+        // 
         res.status(200).json({ message: 'product updated succesfully', 
             updatedProducts
         }) 
@@ -107,7 +107,8 @@ const updateProducts = async(req,res)=>{
         console.error('error in update products',error);
         
     }
-} 
+}
+
 //Handler to delete products
 const deleteProduct = async(req,res)=>{
     try{
@@ -123,6 +124,7 @@ const deleteProduct = async(req,res)=>{
            return res.status(404).json({message: 'product not found'})
         }
 
+        
         res.status(200).json({message: 'product deleted succesfully'})
     }
     catch(error){

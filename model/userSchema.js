@@ -28,7 +28,13 @@ const userSchema = mongoose.Schema({
     isBlock:{
         type: Boolean,
         default: false
-    }  
+    },
+    profilePicture:{
+        type:String
+    },
+    phoneNumber:{
+        type:Number
+    }
 })
 
 
