@@ -31,7 +31,7 @@ const createProducts = async(req,res)=>{
 
         //Check if image is not provided
         if(req.files[0]==null){
-        return res.status(400).json({message:'image required'})
+        return res.status(400).json({message: 'image required'})
         }
 
         //Save given files path if provided
@@ -74,10 +74,11 @@ const getAllProducts = async(req,res)=>{
     res.status(200).json(products)
     }
     catch(error){
+
+        // Handle any errors
         res.status(500).json({error: 'error in getallproduct'})
-        console.error('error in getallproduct',error);
-    }
-   
+        console.error('error in getallproduct', error);
+    }   
 }
 
 //Handler to update products details
@@ -88,7 +89,7 @@ const updateProducts = async(req,res)=>{
         const id = req.params.id
 
         //Take required updated fields
-        const updatedProducts = req.body
+        const updatedProducts = req.body               
         
         //Find product by its id and update directly
         const products = await productSchema.findByIdAndUpdate( id, updatedProducts)
@@ -98,14 +99,16 @@ const updateProducts = async(req,res)=>{
             return res.status(404).json({message: 'product not found'})
         }
 
-        // 
+        // Return a success response
         res.status(200).json({ message: 'product updated succesfully', 
             updatedProducts
         }) 
     }
     catch(error){
+
+        // Handle any errors
         console.error('error in update products',error);
-        
+        res.status(500).json({error: 'error in update products'})
     }
 }
 
@@ -123,11 +126,13 @@ const deleteProduct = async(req,res)=>{
         if(!product){
            return res.status(404).json({message: 'product not found'})
         }
-
         
+        // Return a success response
         res.status(200).json({message: 'product deleted succesfully'})
     }
     catch(error){
+
+        // Handle any errors
         res.status(500).json({error: 'error in delete product'})
         console.error('error in delete product', error);      
     }

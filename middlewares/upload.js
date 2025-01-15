@@ -1,6 +1,6 @@
-
 const multer = require ('multer')
 
+// Handller to uplode images
 const storage = multer.diskStorage({
     
     destination: function( req, file , cb){

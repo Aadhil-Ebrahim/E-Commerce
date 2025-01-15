@@ -20,7 +20,6 @@ const getAllOrders = async(req, res)=>{
 //Handller to get users order by its id
 const getUserOrderById = async(req, res)=>{
     try{
-
         // Extract order id from request params
         const orderId = req.params.orderId
                                                 

@@ -1,4 +1,5 @@
 const {updateProfile, changedPassword, addAddress, getProfile, logout} = require('../controller/userside/usersProfile')
+
 const verifyToken =  require('../middlewares/verifyToken')
 const express = require('express')
 const Router = express.Router()

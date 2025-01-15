@@ -5,7 +5,6 @@ const { createProducts, getAllProducts, updateProducts, deleteProduct } = requir
 const uplode = require('../middlewares/upload')
 const verifyToken = require('../middlewares/verifyToken')
 
- 
 const Router = express.Router()
 
 Router.post ('/admin/addproducts', verifyToken, uplode.array('image'), createProducts)

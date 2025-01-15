@@ -18,13 +18,10 @@ const cartInUserSide = require('./routes/cartInUserSide')
 const profileInUserSide = require('./routes/userProfileRoute')
 const orderInUserSide = require('./routes/orderRoute')
 
-
-
 DB()
 env.config()
 app.use(express.json())
 app.use(cookieParser())
-
 
 app.use(Authentication)
 app.use(productManagement)
@@ -39,10 +36,6 @@ app.use(cartInUserSide)
 app.use(profileInUserSide)
 app.use(orderInUserSide)
  
-app.get('/success/',(req,res)=>{
-    res.send('success')
-})
-
 const port = process.env.PORT
 
 app.listen( port, ()=>{

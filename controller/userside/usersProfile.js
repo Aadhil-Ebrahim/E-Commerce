@@ -164,9 +164,6 @@ const logout = async(req,res)=>{
         const _id = req.user.userId 
         await userSchema.findByIdAndUpdate(_id, { $inc: { tokenVersion: 1 } })
         res.status(200).json({ message: "Logged out successfully" });
-    
-    
 }
-
 
 module.exports = {updateProfile, changedPassword, addAddress, logout, getProfile}

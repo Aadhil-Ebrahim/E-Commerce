@@ -236,9 +236,9 @@ const removeCart = async(req,res)=>{
         // If the cart does not exist or the product was not found, return a 404 response
         if (!updatedCart) {
         return res.status(404).json({ message: 'Cart or product not found' });
-          }
+        }
   
-        
+        // Return a success response
         res.status(200).json({ message: 'product is removed from cart'}) 
         
         // Recalculate the cart's total amount

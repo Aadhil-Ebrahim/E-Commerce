@@ -34,6 +34,10 @@ const userSchema = mongoose.Schema({
     },
     phoneNumber:{
         type:Number
+    },
+    tokenVersion:{
+        type: Number,
+        default: 0
     }
 })
 

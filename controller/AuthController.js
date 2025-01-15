@@ -11,6 +11,7 @@ const cookies = {
 
 const { error } = require('console')
 const { link } = require('fs')
+const { version } = require('os')
 
 env.config()
 
@@ -118,9 +119,9 @@ const login = async(req,res)=>{
 
         // Create JWT token
         const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET
-            // { expiresIn: '1h' }
+            { userId: user._id, version: user.tokenVersion },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
         )
 
         return res.status(200).json({
@@ -211,6 +212,7 @@ const forgetPassword = async(req,res)=>{
    
 }
 
+// Handller to reset password
 const resetpassword = async(req,res)=>{
     try{
         const { newpassword }= req.body

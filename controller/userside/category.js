@@ -21,17 +21,17 @@ const category = async (req,res)=>{
             return res.status(404).json({ message: 'products not found in this category'})
         }
       
-        //Return products
+        //Return products with success
         return res.status(200).json({ message: 'category find successfully',
             product
         }) 
     }
     catch(error){
+
+        // Handle any errors
         res.status(500).json({ error: 'error in category'})
-        console.error('error in category',error);
-                                         
-    } 
-   
+        console.error('error in category',error);                                         
+    }   
 } 
 
-module.exports = {category} 
+module.exports = { category} 
